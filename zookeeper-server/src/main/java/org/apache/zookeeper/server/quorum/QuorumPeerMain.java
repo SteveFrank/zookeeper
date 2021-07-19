@@ -88,6 +88,7 @@ public class QuorumPeerMain {
     public static void main(String[] args) {
         QuorumPeerMain main = new QuorumPeerMain();
         try {
+            // 启动数据清理计划
             main.initializeAndRun(args);
         } catch (IllegalArgumentException e) {
             LOG.error("Invalid arguments, exiting abnormally", e);
@@ -119,6 +120,13 @@ public class QuorumPeerMain {
         ServiceUtils.requestSystemExit(ExitCode.EXECUTION_FINISHED.getValue());
     }
 
+    /**
+     * 启动数据清理计划
+     * @param args
+     * @throws ConfigException
+     * @throws IOException
+     * @throws AdminServerException
+     */
     protected void initializeAndRun(String[] args) throws ConfigException, IOException, AdminServerException {
         QuorumPeerConfig config = new QuorumPeerConfig();
         if (args.length == 1) {
@@ -134,6 +142,7 @@ public class QuorumPeerMain {
         purgeMgr.start();
 
         if (args.length == 1 && config.isDistributed()) {
+            // 集群运行模式
             runFromConfig(config);
         } else {
             LOG.warn("Either no config or no quorum defined in config, running in standalone mode");
@@ -142,6 +151,16 @@ public class QuorumPeerMain {
         }
     }
 
+    /**
+     * 注册JMX
+     * 创建MetricsProvider
+     * 初始化授权模式
+     * 设置ServerCnxnFactory(NIO)
+     * 选举参数配置-QuorumPeer
+     * @param config
+     * @throws IOException
+     * @throws AdminServerException
+     */
     public void runFromConfig(QuorumPeerConfig config) throws IOException, AdminServerException {
         try {
             ManagedUtil.registerLog4jMBeans();
